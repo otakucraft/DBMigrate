@@ -1,5 +1,5 @@
+from sqlalchemy import create_engine, Column, VARCHAR, ForeignKey, NUMERIC
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy import create_engine, Column, String, Numeric, CHAR, ForeignKey
 from sqlalchemy.orm import relationship, backref
 
 
@@ -9,46 +9,75 @@ class Database:
     class PlayerTable(_base):
         __tablename__ = "player"
 
-        name = Column(String(20), primary_key=True, nullable=False)
-        discordId = Column(Numeric, default=None)
-        timesJoined = Column(Numeric, default=0)
-        isBanned = Column(Numeric, default=0)
-        perms = Column(Numeric, default=1)
+        uuid = Column(VARCHAR(50), primary_key=True, nullable=False)
+        name = Column(VARCHAR(50), default=None)
 
-        def __init__(self, name, discordID, timesJoined, isBanned, perms):
+        def __init__(self, uuid, name):
+            self.uuid = uuid
             self.name = name
-            self.discordId = discordID
-            self.timesJoined = timesJoined
-            self.isBanned = isBanned
-            self.perms = perms
 
-    class PosTable(_base):
-        __tablename__ = "pos"
+    class BackTable(_base):
+        __tablename__ = "back"
 
-        name = Column(String(20), ForeignKey("player.name"), primary_key=True, nullable=False)
+        uuid = Column(VARCHAR(50), ForeignKey("player.uuid"), primary_key=True, nullable=False)
+        deathX = Column(NUMERIC, default=None)
+        deathY = Column(NUMERIC, default=None)
+        deathZ = Column(NUMERIC, default=None)
+        deathDim = Column(NUMERIC, default=None)
 
-        deathX = Column(Numeric, default=None)
-        deathY = Column(Numeric, default=None)
-        deathZ = Column(Numeric, default=None)
-        deathDim = Column(CHAR(20), default=None)
+        id = relationship("PlayerTable", backref=backref("back", uselist=False))
 
-        homeX = Column(Numeric, default=None)
-        homeY = Column(Numeric, default=None)
-        homeZ = Column(Numeric, default=None)
-        homeDim = Column(CHAR(20), default=None)
-
-        id = relationship("PlayerTable", backref=backref("pos", uselist=False))
-
-        def __init__(self, name, deathX, deathY, deathZ, deathDim, homeX, homeY, homeZ, homeDim):
-            self.name = name
+        def __init__(self, uuid, deathX, deathY, deathZ, deathDim):
+            self.uuid = uuid
             self.deathX = deathX
             self.deathY = deathY
             self.deathZ = deathZ
             self.deathDim = deathDim
+
+    class HomeTable(_base):
+        __tablename__ = "home"
+
+        uuid = Column(VARCHAR(50), ForeignKey("player.uuid"), primary_key=True, nullable=False)
+        homeX = Column(NUMERIC, default=None)
+        homeY = Column(NUMERIC, default=None)
+        homeZ = Column(NUMERIC, default=None)
+        homeDim = Column(NUMERIC, default=None)
+
+        id = relationship("PlayerTable", backref=backref("home", uselist=False))
+
+        def __init__(self, uuid, homeX, homeY, homeZ, homeDim):
+            self.uuid = uuid
             self.homeX = homeX
             self.homeY = homeY
             self.homeZ = homeZ
             self.homeDim = homeDim
+
+    class PermsTable(_base):
+        __tablename__ = "perms"
+
+        uuid = Column(VARCHAR(50), ForeignKey("player.uuid"), primary_key=True, nullable=False)
+        level = Column(NUMERIC, default=1)
+
+        id = relationship("PlayerTable", backref=backref("perms", uselist=False))
+
+        def __init__(self, uuid, level):
+            self.uuid = uuid
+            self.level = level
+
+    class DiscordTable(_base):
+        __tablename__ = "discord"
+
+        uuid = Column(VARCHAR(50), ForeignKey("player.uuid"), primary_key=True, nullable=False)
+        discordID = Column(NUMERIC, primary_key=True, nullable=False)
+
+        id = relationship("PlayerTable", backref=backref("discord", uselist=False))
+
+    class DiscordBannedTable(_base):
+        __tablename__ = "discord_banned"
+
+        discordID = Column(NUMERIC, ForeignKey("discord.discordID"), primary_key=True, nullable=False)
+
+        id = relationship("DiscordTable", backref=backref("discord_banned", uselist=False))
 
     def __init__(self, file_path: str):
         self._engine = create_engine("sqlite:///" + file_path, echo=False)
