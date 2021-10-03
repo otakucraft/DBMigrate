@@ -17,9 +17,9 @@ class Query:
         res: list[Database.PlayerTable] = self.session.execute(select(table)).fetchall()
         return res
 
-    def get_pos_data(self) -> list[Database.PosTable]:
+    def get_player_pos_data(self, player_name) -> Database.PosTable:
         table = Table(
             self.db.PosTable.__tablename__, self.metadata, autoload=True, autoload_with=self.db.get_engine()
         )
-        res: list[Database.PosTable] = self.session.execute(select(table)).fetchall()
+        res: Database.PosTable = self.session.execute(select(table).where(table.columns.name == player_name)).fetchone()
         return res

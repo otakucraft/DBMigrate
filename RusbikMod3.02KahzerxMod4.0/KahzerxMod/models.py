@@ -72,12 +72,19 @@ class Database:
 
         id = relationship("PlayerTable", backref=backref("discord", uselist=False))
 
+        def __init__(self, uuid, discordID):
+            self.uuid = uuid
+            self.discordID = discordID
+
     class DiscordBannedTable(_base):
         __tablename__ = "discord_banned"
 
         discordID = Column(NUMERIC, ForeignKey("discord.discordID"), primary_key=True, nullable=False)
 
         id = relationship("DiscordTable", backref=backref("discord_banned", uselist=False))
+
+        def __init__(self, discordID):
+            self.discordID = discordID
 
     def __init__(self, file_path: str):
         self._engine = create_engine("sqlite:///" + file_path, echo=False)
